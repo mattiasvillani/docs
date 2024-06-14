@@ -100,7 +100,6 @@ website:
                 href: tutorials/14-minituring/index.qmd
               - tutorials/docs-06-for-developers-interface/index.qmd
 
-
           - section: "For Developers (Inference)"
             collapse-level: 1
             contents:
@@ -108,6 +107,9 @@ website:
               - tutorials/docs-07-for-developers-variational-inference/index.qmd
               - text: "Implementing Samplers"
                 href: tutorials/docs-17-implementing-samplers/index.qmd
+          
+          - text: FAQs
+            href: tutorials/faqs/index.qmd
 
 
   page-footer:

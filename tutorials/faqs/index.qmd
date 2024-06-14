@@ -1,0 +1,67 @@
+---
+title: Frequently Asked Questions
+engine: Julia
+draft: true
+draft-mode: visible
+---
+
+We can either use callout blocks for adding the FAQs or else we can just use the normal heading and paragraph.
+
+## We can have these types of Callout blocks for FAQs
+
+### Normal Callout
+::: {.callout-note}
+## Questions can be here!
+This is an Answer to your question.
+:::
+
+### Without Icon
+::: {.callout-note icon=false}
+## Questions can be here!
+This is an Answer to your question.
+:::
+
+### Collapsible
+::: {.callout-note icon="false" collapse="true"}
+## Questions can be here!
+This is an Answer to your question.
+:::
+
+### Simple Appearance
+::: {.callout-note appearance="simple"}
+## Questions can be here!
+This is an Answer to your question.
+:::
+
+### Simple Appearance + Collapsible
+::: {.callout-note icon="false" collapse="true" appearance="simple"}
+## Questions can be here!
+This is an Answer to your question.
+:::
+
+
+## Other Callout Blocks
+
+### Warning
+::: {.callout-warning }
+## Questions can be here!
+This is an Answer to your question.
+:::
+
+### Important
+::: {.callout-important }
+## Questions can be here!
+This is an Answer to your question.
+:::
+
+### Tip
+::: {.callout-tip }
+## Questions can be here!
+This is an Answer to your question.
+:::
+
+### Caution
+::: {.callout-caution }
+## Questions can be here!
+This is an Answer to your question.
+:::
