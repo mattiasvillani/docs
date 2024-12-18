@@ -16,18 +16,17 @@ This article provides an overview of the core functionality in Turing.jl, which 
 
 ### Introduction
 
-A probabilistic program is Julia code wrapped in a `@model` macro. It can use arbitrary Julia code, but to ensure correctness of inference it should not have external effects or modify global state. Stack-allocated variables are safe, but mutable heap-allocated objects may lead to subtle bugs when using task copying. By default Libtask deepcopies `Array` and `Dict` objects when copying task to avoid bugs with data stored in mutable structure in Turing models.
+A probabilistic program, like Turing.jl, specifies a probabilistic model in computer code, often using notation which is close to a mathematical description of the model. A probabilistic program can then be used to automatically simulate from the model, to infer unknown model parameters conditional on observed data and to generate predictions, without the need to implement the inference algorithms.
 
-To specify distributions of random variables, Turing programs should use the `~` notation:
+A Turing program is Julia code wrapped in a `@model` macro.[^1] To specify distributions of random variables, Turing programs use the `~` notation: `x ~ distr` where `x` is a symbol and `distr` is a distribution; for example `x ~ Normal(0,1)` specifies that `x` follows a standard normal distribution where `Normal()` is the normal distribution from the `Distributions.jl` package. `distr` can be a value of any type that implements `rand(distr)` to sample a value from the distribution `dist`r and `logpdf(distr,y)` to compute its log density. If `x` is undefined in the model function, inside the probabilistic program, this puts a random variable named `x`, distributed according to `distr`, in the current scope. If `x` is defined, this is used as observed data for conditioning. In this case, `x` is an observed value, assumed to have been drawn from the distribution `distr`.
 
-`x ~ distr` where `x` is a symbol and `distr` is a distribution. If `x` is undefined in the model function, inside the probabilistic program, this puts a random variable named `x`, distributed according to `distr`, in the current scope. `distr` can be a value of any type that implements `rand(distr)`, which samples a value from the distribution `distr`. If `x` is defined, this is used for conditioning in a style similar to [Anglican](https://probprog.github.io/anglican/index.html) (another PPL). In this case, `x` is an observed value, assumed to have been drawn from the distribution `distr`. The likelihood is computed using `logpdf(distr,y)`. The observe statements should be arranged so that every possible run traverses all of them in exactly the same order. This is equivalent to demanding that they are not placed inside stochastic control flow.
+[^1]: The macro can use arbitrary Julia code, but to ensure correctness of inference it should not have external effects or modify global state. Stack-allocated variables are safe, but mutable heap-allocated objects may lead to subtle bugs when using task copying. By default Libtask deepcopies `Array` and `Dict` objects when copying task to avoid bugs with data stored in mutable structure in Turing models.
 
 Available inference methods include Importance Sampling (IS), Sequential Monte Carlo (SMC), Particle Gibbs (PG), Hamiltonian Monte Carlo (HMC), Hamiltonian Monte Carlo with Dual Averaging (HMCDA) and The No-U-Turn Sampler (NUTS).
 
 ### Simple Gaussian Demo
 
-Below is a simple Gaussian demo illustrate the basic usage of Turing.jl.
-
+Below is a simple Gaussian demo to illustrate the basic usage of Turing.jl.
 
 ```{julia}
 # Import packages.
@@ -68,12 +67,12 @@ c6 = sample(gdemo(1.5, 2), NUTS(0.65), 1000)
 
 The arguments for each sampler are:
 
-  - SMC: number of particles.
-  - PG: number of particles, number of iterations.
-  - HMC: leapfrog step size, leapfrog step numbers.
-  - Gibbs: component sampler 1, component sampler 2, ...
-  - HMCDA: total leapfrog length, target accept ratio.
-  - NUTS: number of adaptation steps (optional), target accept ratio.
+-   SMC: number of particles.
+-   PG: number of particles, number of iterations.
+-   HMC: leapfrog step size, leapfrog step numbers.
+-   Gibbs: component sampler 1, component sampler 2, ...
+-   HMCDA: total leapfrog length, target accept ratio.
+-   NUTS: number of adaptation steps (optional), target accept ratio.
 
 More information about each sampler can be found in [Turing.jl's API docs](https://turinglang.org/Turing.jl).
 
@@ -117,9 +116,7 @@ The returned chain contains samples of the variables in the model.
 var_1 = mean(chn[:var_1]) # Taking the mean of a variable named var_1.
 ```
 
-The key (`:var_1`) can be a `Symbol` or a `String`. For example, to fetch `x[1]`, one can use `chn[Symbol("x[1]")]` or `chn["x[1]"]`.
-If you want to retrieve all parameters associated with a specific symbol, you can use `group`. As an example, if you have the
-parameters `"x[1]"`, `"x[2]"`, and `"x[3]"`, calling `group(chn, :x)` or `group(chn, "x")` will return a new chain with only `"x[1]"`, `"x[2]"`, and `"x[3]"`.
+The key (`:var_1`) can be a `Symbol` or a `String`. For example, to fetch `x[1]`, one can use `chn[Symbol("x[1]")]` or `chn["x[1]"]`. If you want to retrieve all parameters associated with a specific symbol, you can use `group`. As an example, if you have the parameters `"x[1]"`, `"x[2]"`, and `"x[3]"`, calling `group(chn, :x)` or `group(chn, "x")` will return a new chain with only `"x[1]"`, `"x[2]"`, and `"x[3]"`.
 
 Turing does not have a declarative form. More generally, the order in which you place the lines of a `@model` macro matters. For example, the following example works:
 
@@ -238,8 +235,7 @@ Turing allows you to sample from a declared model's prior. If you wish to draw a
 chain = sample(model, Prior(), n_samples)
 ```
 
-You can also run your model (as if it were a function) from the prior distribution, by calling the model without specifying inputs or a sampler. In the below example, we specify a `gdemo` model which returns two variables, `x` and `y`. The model includes `x` and `y` as arguments, but calling the function without passing in `x` or `y` means that Turing's compiler will assume they are missing values to draw from the relevant distribution. The `return` statement is necessary to retrieve the sampled `x` and `y` values.
-Assign the function with `missing` inputs to a variable, and Turing will produce a sample from the prior distribution.
+You can also run your model (as if it were a function) from the prior distribution, by calling the model without specifying inputs or a sampler. In the below example, we specify a `gdemo` model which returns two variables, `x` and `y`. The model includes `x` and `y` as arguments, but calling the function without passing in `x` or `y` means that Turing's compiler will assume they are missing values to draw from the relevant distribution. The `return` statement is necessary to retrieve the sampled `x` and `y` values. Assign the function with `missing` inputs to a variable, and Turing will produce a sample from the prior distribution.
 
 ```{julia}
 @model function gdemo(x, y)
@@ -305,7 +301,6 @@ c = sample(model, HMC(0.01, 5), 500)
 
 Arguments to Turing models can have default values much like how default values work in normal Julia functions. For instance, the following will assign `missing` to `x` and treat it as a random variable. If the default value is not `missing`, `x` will be assigned that value and will be treated as an observation instead.
 
-
 ```{julia}
 using Turing
 
@@ -330,29 +325,29 @@ chain = sample(m, HMC(0.01, 5), 1000)
 
 You can access the values inside a chain several ways:
 
- 1. Turn them into a `DataFrame` object
- 2. Use their raw `AxisArray` form
- 3. Create a three-dimensional `Array` object
+1.  Turn them into a `DataFrame` object
+2.  Use their raw `AxisArray` form
+3.  Create a three-dimensional `Array` object
 
 For example, let `c` be a `Chain`:
 
- 1. `DataFrame(c)` converts `c` to a `DataFrame`,
- 2. `c.value` retrieves the values inside `c` as an `AxisArray`, and
- 3. `c.value.data` retrieves the values inside `c` as a 3D `Array`.
+1.  `DataFrame(c)` converts `c` to a `DataFrame`,
+2.  `c.value` retrieves the values inside `c` as an `AxisArray`, and
+3.  `c.value.data` retrieves the values inside `c` as a 3D `Array`.
 
 #### Variable Types and Type Parameters
 
 The element type of a vector (or matrix) of random variables should match the `eltype` of its prior distribution, `<: Integer` for discrete distributions and `<: AbstractFloat` for continuous distributions. Moreover, if the continuous random variable is to be sampled using a Hamiltonian sampler, the vector's element type needs to either be:
 
-1. `Real` to enable auto-differentiation through the model which uses special number types that are sub-types of `Real`, or
+1.  `Real` to enable auto-differentiation through the model which uses special number types that are sub-types of `Real`, or
 
-2. Some type parameter `T` defined in the model header using the type parameter syntax, e.g. `function gdemo(x, ::Type{T} = Float64) where {T}`.
+2.  Some type parameter `T` defined in the model header using the type parameter syntax, e.g. `function gdemo(x, ::Type{T} = Float64) where {T}`.
 
 Similarly, when using a particle sampler, the Julia variable used should either be:
 
-1. An `Array`, or
+1.  An `Array`, or
 
-2. An instance of some type parameter `T` defined in the model header using the type parameter syntax, e.g. `function gdemo(x, ::Type{T} = Vector{Float64}) where {T}`.
+2.  An instance of some type parameter `T` defined in the model header using the type parameter syntax, e.g. `function gdemo(x, ::Type{T} = Vector{Float64}) where {T}`.
 
 ### Querying Probabilities from Model or Chain
 
@@ -427,7 +422,7 @@ mle_estimate = maximum_likelihood(model)
 map_estimate = maximum_a_posteriori(model)
 ```
 
-For more details see the [mode estimation page]({{<meta using-turing-mode-estimation>}}).
+For more details see the [mode estimation page](%7B%7B%3Cmeta%20using-turing-mode-estimation%3E%7D%7D).
 
 ## Beyond the Basics
 
@@ -453,7 +448,7 @@ simple_choice_f = simple_choice([1.5, 2.0, 0.3])
 chn = sample(simple_choice_f, Gibbs(HMC(0.2, 3, :p), PG(20, :z)), 1000)
 ```
 
-The `Gibbs` sampler can be used to specify unique automatic differentiation backends for different variable spaces. Please see the [Automatic Differentiation]({{<meta using-turing-autodiff>}}) article for more.
+The `Gibbs` sampler can be used to specify unique automatic differentiation backends for different variable spaces. Please see the [Automatic Differentiation](%7B%7B%3Cmeta%20using-turing-autodiff%3E%7D%7D) article for more.
 
 For more details of compositional sampling in Turing.jl, please check the corresponding [paper](https://proceedings.mlr.press/v84/ge18b.html).
 
@@ -463,8 +458,7 @@ Turing provides `filldist(dist::Distribution, n::Int)` and `arraydist(dists::Abs
 
 #### Constructing product distributions with filldist
 
-The function `filldist` provides a general interface to construct product distributions over distributions of the same type and parameterisation.
-Note that, in contrast to the product distribution interface provided by Distributions.jl (`Product`), `filldist` supports product distributions over univariate or multivariate distributions.
+The function `filldist` provides a general interface to construct product distributions over distributions of the same type and parameterisation. Note that, in contrast to the product distribution interface provided by Distributions.jl (`Product`), `filldist` supports product distributions over univariate or multivariate distributions.
 
 Example usage:
 
@@ -479,8 +473,7 @@ end
 
 #### Constructing product distributions with `arraydist`
 
-The function `arraydist` provides a general interface to construct product distributions over distributions of varying type and parameterisation.
-Note that in contrast to the product distribution interface provided by Distributions.jl (`Product`), `arraydist` supports product distributions over univariate or multivariate distributions.
+The function `arraydist` provides a general interface to construct product distributions over distributions of varying type and parameterisation. Note that in contrast to the product distribution interface provided by Distributions.jl (`Product`), `arraydist` supports product distributions over univariate or multivariate distributions.
 
 Example usage:
 
@@ -516,19 +509,10 @@ ForwardDiff (Turing's default AD backend) uses forward-mode chunk-wise AD. The c
 
 Turing supports four automatic differentiation (AD) packages in the back end during sampling. The default AD backend is [ForwardDiff](https://github.com/JuliaDiff/ForwardDiff.jl) for forward-mode AD. Three reverse-mode AD backends are also supported, namely [Mooncake](https://github.com/compintell/Mooncake.jl), [Zygote](https://github.com/FluxML/Zygote.jl) and [ReverseDiff](https://github.com/JuliaDiff/ReverseDiff.jl). `Mooncake`, `Zygote`, and `ReverseDiff` also require the user to explicitly load them using `import Mooncake`, `import Zygote`, or `import ReverseDiff` next to `using Turing`.
 
-For more information on Turing's automatic differentiation backend, please see the [Automatic Differentiation]({{<meta using-turing-autodiff>}}) article.
+For more information on Turing's automatic differentiation backend, please see the [Automatic Differentiation](%7B%7B%3Cmeta%20using-turing-autodiff%3E%7D%7D) article.
 
 #### Progress Logging
 
-`Turing.jl` uses ProgressLogging.jl to log the sampling progress. Progress
-logging is enabled as default but might slow down inference. It can be turned on
-or off by setting the keyword argument `progress` of `sample` to `true` or `false`.
-Moreover, you can enable or disable progress logging globally by calling `setprogress!(true)` or `setprogress!(false)`, respectively.
+`Turing.jl` uses ProgressLogging.jl to log the sampling progress. Progress logging is enabled as default but might slow down inference. It can be turned on or off by setting the keyword argument `progress` of `sample` to `true` or `false`. Moreover, you can enable or disable progress logging globally by calling `setprogress!(true)` or `setprogress!(false)`, respectively.
 
-Turing uses heuristics to select an appropriate visualization backend. If you
-use Jupyter notebooks, the default backend is
-[ConsoleProgressMonitor.jl](https://github.com/tkf/ConsoleProgressMonitor.jl).
-In all other cases, progress logs are displayed with
-[TerminalLoggers.jl](https://github.com/c42f/TerminalLoggers.jl). Alternatively,
-if you provide a custom visualization backend, Turing uses it instead of the
-default backend.
+Turing uses heuristics to select an appropriate visualization backend. If you use Jupyter notebooks, the default backend is [ConsoleProgressMonitor.jl](https://github.com/tkf/ConsoleProgressMonitor.jl). In all other cases, progress logs are displayed with [TerminalLoggers.jl](https://github.com/c42f/TerminalLoggers.jl). Alternatively, if you provide a custom visualization backend, Turing uses it instead of the default backend.
